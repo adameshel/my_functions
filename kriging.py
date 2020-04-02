@@ -151,7 +151,7 @@ def kriging_execute(df_krg, x_grid_utm, y_grid_utm,
                     sill_guess=None, range_guess=25, range_cal=False,
                     timestamp=0, unit_length='m', delete_links=True, 
                     change_bw=False, bandwidth_in_km=0.3, 
-                    doy=1, duration_agg=186):
+                    doy=1, duration_agg=186, printing=False):
     '''df_krg: dataframe which is in the form of the output of
 `create_virtual_gauges.py`.
 range_guess: a first guess of the decorrelation distance (in km).
@@ -368,15 +368,16 @@ duration_agg: duration of aggrigation time of rainfall (h). Van De Beek 2012.
           'bandwidth (bw) = ' + str(bw) + '\n', 'noise_in_cov_function = ' +\
           str(noise_in_function) + '\n',\
           'exclude links = ' + str(df_exclude_link.l_num.values) )
-    ## plotting the semivariogram
-    plt.fig, ax = plt.subplots(figsize=(10,5))
-    ax.plot( sv[0], sv[1], '.-' )
-    plt.xlim(0,np.max(sv[0]))
-    ax.plot( sv[0], func_to_opt( sv[0], C0, a_krg ) )
-    ax.plot( sv[0], cov_func(sv[0]) )
-    ax.set_title('Spherical Model, timeframe: ' + str(timestamp))
-    ax.set_ylabel('Semivariance')
-    ax.set_xlabel('Lag [m]')
+    if printing is True:
+        ## plotting the semivariogram
+        plt.fig, ax = plt.subplots(figsize=(10,5))
+        ax.plot( sv[0], sv[1], '.-' )
+        plt.xlim(0,np.max(sv[0]))
+        ax.plot( sv[0], func_to_opt( sv[0], C0, a_krg ) )
+        ax.plot( sv[0], cov_func(sv[0]) )
+        ax.set_title('Spherical Model, timeframe: ' + str(timestamp))
+        ax.set_ylabel('Semivariance')
+        ax.set_xlabel('Lag [m]')
     
     rainfield_flat = np.zeros(np.shape(x_grid_utm.flatten()))
 #         temp_weights = np.zeros(np.shape(py_xgrid_UTM.flatten()))
