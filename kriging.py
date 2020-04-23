@@ -289,7 +289,7 @@ duration_agg: duration of aggrigation time of rainfall (h). Van De Beek 2012.
         if sill_guess is None:
 #            sill_guess = np.median(sv[1]) + np.median(sv[1]) / 2
             sill_guess = np.var(sv[1])
-            if sill_guess < 0.5:
+            if (sill_guess < 0.5) or (sill_guess is None):
                 sill_guess = 0.5
         ## normalizing the initial guesses and the semivariance values
         magnitude_sill = 10 ** (int(np.log10(sill_guess)))
@@ -397,6 +397,6 @@ duration_agg: duration of aggrigation time of rainfall (h). Van De Beek 2012.
     df_krg = df_krg.reset_index()
     print('Processing finished')
     
-    return gridded_snapshot, df_krg
+    return gridded_snapshot, df_krg, [a_krg, C0]
 #######################################################
 #######################################################
