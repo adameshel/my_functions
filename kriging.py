@@ -198,7 +198,8 @@ def kriging_execute(df_krg, x_grid_utm, y_grid_utm,
                     change_bw=False, bandwidth_in_km=0.3, 
                     doy=1, duration_agg=186, optimize=True, printing=False,
                     cond_num_thresh = 3e5, pykrige_opt_pars=True,
-                    cutoff_distance_meters=25000):
+                    cutoff_distance_meters=25000, save_fig=False,
+                    dir_path=None, fig_str=None):
     '''df_krg: dataframe which is in the form of the output of
 `create_virtual_gauges.py`.
 range_guess: a first guess of the decorrelation distance (in km).
@@ -310,7 +311,7 @@ optimize: Bool. Optimize kriging parameters or not.
                                   gridy, 
                                   data, 
                                   variogram_model=cov_model,
-                                 enable_plotting=printing,
+                                 enable_plotting=False,
                                  nlags=21,
                                   weight=True,
                                  cutoff_distance=cutoff_distance_meters)
@@ -493,6 +494,11 @@ optimize: Bool. Optimize kriging parameters or not.
         ax.set_title('Spherical Model, timeframe: ' + str(timestamp))
         ax.set_ylabel('Semivariance')
         ax.set_xlabel('Lag [m]')
+        if save_fig is True and (dir_path and fig_str):
+            plt.fig.savefig(
+                dir_path + 'fig' + fig_str + '_ts' + str(timestamp)
+                )
+            plt.close(plt.fig)
     
     rainfield_flat = np.zeros(np.shape(x_grid_utm.flatten()))
 #         temp_weights = np.zeros(np.shape(py_xgrid_UTM.flatten()))
@@ -513,7 +519,7 @@ optimize: Bool. Optimize kriging parameters or not.
     df_krg = df_krg.reset_index()
     print('Processing finished')
     
-    return gridded_snapshot, df_krg#, (Range, Sill)
+    return gridded_snapshot, df_krg, (Range, Sill, Sill*0.1)
 #######################################################
 #######################################################
     
