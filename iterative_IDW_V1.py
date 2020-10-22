@@ -193,13 +193,23 @@ class IdwIterative():
             
         # Check whether the same links are available for weights calculations
         if df['Link_num'].equals(self.df_for_dist['Link_num']):
-            print('Reusing precalculated weights')
+            if ROI_for_interp:
+                if self.ROI == self.ROI_prev:
+                    print('Reusing precalculated weights')
+                else:
+                    print('Recalculating weights because' +\
+                          ' CML IDs in input DataFrame did change')
+                    self.df_for_dist = df
+                    self._calc_all_weights()    
         else:
-            print('Recalculating weights because CML IDs in input DataFrame did change')
+            print('Recalculating weights because' +\
+                  ' CML IDs in input DataFrame did change')
             self.df_for_dist = df
             self._calc_all_weights()
 
-        
+        if ROI_for_interp:
+            self.ROI_prev = ROI_for_interp
+            
         # each vector contains data for all the gauges of all the links
         self.df = df
         self.Q = quantization
