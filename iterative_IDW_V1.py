@@ -155,7 +155,8 @@ def calc_grid_weights(D, ROI, method, p_par):
         w[D < ROI] = (ROI/D[D < ROI] - 1.0)**p_par
         w[w < 0.0000000000001] = 0.0
     else:
-        w[D < ROI] = (ROI**p_par - D[D < ROI]**p_par)/(ROI**p_par + D[D < ROI]**p_par)
+        w[D < ROI] = \
+            (ROI**p_par - D[D < ROI]**p_par)/(ROI**p_par + D[D < ROI]**p_par)
         w[w < 0.0000000000001] = 0.0
     return w
 
@@ -163,6 +164,7 @@ class IdwIterative():
     def __init__(self, df_for_dist, xgrid, ygrid, ROI=0.0, max_iterations=1, 
                  tolerance=0.0, method=0, p_par=2.0):
         self.ROI = ROI
+        self.ROI_gmz = ROI
         self.max_iterations = max_iterations
         self.tolerance = tolerance
         self.method = method # weighting method (0-shepard, 1-cressman)
@@ -174,7 +176,8 @@ class IdwIterative():
         self._calc_all_weights()
         print('Calculation of weights finished')
                 
-    def __call__(self, df, quantization, interpolate=True):
+    def __call__(self, df, quantization, interpolate=True,
+                 ROI_for_interp=None):
         ''' Calculates the rain rate at every virtual gauge of every cml
         and uses the results to create a rain map with IDW interpolation.
         df is a pandas DataFrame that should include the following columns:
@@ -185,6 +188,9 @@ class IdwIterative():
         a, b - ITU power law parameters
         A - attenuation due to rain only
         '''
+        if ROI_for_interp:
+            self.ROI = ROI_for_interp
+            
         # Check whether the same links are available for weights calculations
         if df['Link_num'].equals(self.df_for_dist['Link_num']):
             print('Reusing precalculated weights')
