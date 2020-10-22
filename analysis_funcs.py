@@ -46,8 +46,9 @@ def spatialCorrelation(ds_1,ds_2):
     xi=0
     for yi in range(y): #lat -> rows
         for xi in range(x): #lon -> columns
-            spat_corr_mat[yi,xi] = np.corrcoef(ds_1['raindepth'].sel(y=yi, x=xi).values,
-                                               ds_2['raindepth'].sel(y=yi, x=xi).values)[0,1]
+            spat_corr_mat[yi,xi] = np.corrcoef(
+                ds_1['raindepth'].sel(y=yi, x=xi).values,
+                ds_2['raindepth'].sel(y=yi, x=xi).values)[0,1]
     return spat_corr_mat
 
 
@@ -68,8 +69,9 @@ def spatialRMSE(ds_1,ds_2):
     xi=0
     for yi in range(y): #lat -> rows
         for xi in range(x): #lon -> columns
-            spat_rmse_mat[yi,xi] = rmse(ds_1['raindepth'].sel(y=yi, x=xi).values,
-                                        ds_2['raindepth'].sel(y=yi, x=xi).values)
+            spat_rmse_mat[yi,xi] = rmse(
+                ds_1['raindepth'].sel(y=yi, x=xi).values,
+                ds_2['raindepth'].sel(y=yi, x=xi).values)
     return spat_rmse_mat
 
 
@@ -81,8 +83,10 @@ def time_corr_spatSnapshots(groundTruth,
                             rounding=False,
                             nan_thresh=0):
     '''Ave. corr of grid for a chosen timestamp
-    threshold: get rid of values not exceeding this rain intensity in both GT and reconst.
-    equal_to_thresh: True if you want to discard numbers smaller OR EQUAL to threshold.
+    threshold: get rid of values not exceeding this rain intensity in both 
+    GT and reconst.
+    equal_to_thresh: True if you want to discard numbers smaller OR EQUAL to 
+    threshold.
     rounding: assign True to round values to 3 decimals.'''
     time_corr_vec = np.zeros(groundTruth.time.size) # number of timestamps
     i=0
@@ -94,13 +98,18 @@ def time_corr_spatSnapshots(groundTruth,
             # exclude very weak rain cells
             time_corr_vec[i] = np.nan
         else:
-            nan_pairs = ~np.logical_or(np.isnan(groundTruth['raindepth'].sel(time=timestamp).values.flatten()), 
-                                       np.isnan(estimation['raindepth'].sel(time=timestamp).values.flatten()))
+            nan_pairs = ~np.logical_or(
+                np.isnan(groundTruth['raindepth'].sel(
+                    time=timestamp).values.flatten()), 
+                np.isnan(estimation['raindepth'].sel(
+                    time=timestamp).values.flatten()))
             
-            groundTruth_for_corr = np.compress(nan_pairs,
-                                               groundTruth['raindepth'].sel(time=timestamp).values.flatten())
-            est_for_corr = np.compress(nan_pairs,
-                                       estimation['raindepth'].sel(time=timestamp).values.flatten())
+            groundTruth_for_corr = np.compress(
+                nan_pairs,
+                groundTruth['raindepth'].sel(time=timestamp).values.flatten())
+            est_for_corr = np.compress(
+                nan_pairs,
+                estimation['raindepth'].sel(time=timestamp).values.flatten())
             if rounding is True:
                 groundTruth_for_corr = np.round(groundTruth_for_corr, 3)
                 est_for_corr = np.round(est_for_corr, 3)
@@ -121,7 +130,8 @@ def time_corr_spatSnapshots(groundTruth,
             ################
             
     #        import pdb; pdb.set_trace()
-            time_corr_vec[i] = np.corrcoef(groundTruth_for_corr, est_for_corr)[0,1]
+            time_corr_vec[i] = \
+                np.corrcoef(groundTruth_for_corr, est_for_corr)[0,1]
     return time_corr_vec
 
 
@@ -134,9 +144,11 @@ def time_RMSE_spatSnapshots(groundTruth,
                             rounding=False,
                             nan_thresh=0):
     '''Ave. corr of grid for a chosen timestamp
-    threshold: get rid of values not exceeding this rain intensity in both GT and reconst.
+    threshold: get rid of values not exceeding this rain intensity in 
+    both GT and reconst.
     normalize: boolian indicatind if you wish to devide rmse by mean rainfall.
-    equal_to_thresh: True if you want to discard numbers smaller OR EQUAL to threshold.
+    equal_to_thresh: True if you want to discard numbers smaller OR EQUAL to 
+    threshold.
     rounding: assign True to round values to 3 decimals.'''
     time_RMSE_vec = np.zeros(groundTruth.time.size) # number of timestamps
     # import pdb; pdb.set_trace()
@@ -150,13 +162,18 @@ def time_RMSE_spatSnapshots(groundTruth,
             time_RMSE_vec[i] = np.nan
         else:
     #        import pdb; pdb.set_trace()
-            nan_pairs = ~np.logical_or(np.isnan(groundTruth['raindepth'].sel(time=timestamp).values.flatten()), 
-                                       np.isnan(estimation['raindepth'].sel(time=timestamp).values.flatten()))
+            nan_pairs = ~np.logical_or(
+                np.isnan(groundTruth['raindepth'].sel(
+                    time=timestamp).values.flatten()), 
+                np.isnan(estimation['raindepth'].sel(
+                    time=timestamp).values.flatten()))
             
-            groundTruth_for_RMSE = np.compress(nan_pairs,
-                                               groundTruth['raindepth'].sel(time=timestamp).values.flatten())
-            est_for_RMSE = np.compress(nan_pairs,
-                                       estimation['raindepth'].sel(time=timestamp).values.flatten())
+            groundTruth_for_RMSE = np.compress(
+                nan_pairs,
+                groundTruth['raindepth'].sel(time=timestamp).values.flatten())
+            est_for_RMSE = np.compress(
+                nan_pairs,
+                estimation['raindepth'].sel(time=timestamp).values.flatten())
             
             if rounding is True:
                 groundTruth_for_RMSE = np.round(groundTruth_for_RMSE, 3)
@@ -180,7 +197,9 @@ def time_RMSE_spatSnapshots(groundTruth,
             if normalize is False:
                 time_RMSE_vec[i] = rmse(groundTruth_for_RMSE, est_for_RMSE)
             else:
-                time_RMSE_vec[i] = rmse(groundTruth_for_RMSE, est_for_RMSE)/np.mean(groundTruth_for_RMSE)
+                time_RMSE_vec[i] = \
+                    rmse(groundTruth_for_RMSE, est_for_RMSE)/np.nanmean(
+                        groundTruth_for_RMSE)
             #print('rmse normalized by the domains mean rain intensity')
     return time_RMSE_vec
 
@@ -193,9 +212,11 @@ def time_RMSE_spatSnapshots_bins(groundTruth,
                                 rounding=False,
                                 nan_thresh=0):
     '''
-    threshold: get rid of values not exceeding this rain intensity in both GT and reconst.
+    threshold: get rid of values not exceeding this rain intensity in both GT 
+    and reconst.
     normalize: boolian indicatind if you wish to devide rmse by mean rainfall.
-    equal_to_thresh: True if you want to discard numbers smaller OR EQUAL to threshold.
+    equal_to_thresh: True if you want to discard numbers smaller OR EQUAL to 
+    threshold.
     rounding: assign True to round values to 3 decimals.'''
     time_RMSE_vec = np.zeros(groundTruth.time.size) # number of timestamps
     # import pdb; pdb.set_trace()
@@ -209,13 +230,16 @@ def time_RMSE_spatSnapshots_bins(groundTruth,
             time_RMSE_vec[i] = np.nan
         else:
     #        import pdb; pdb.set_trace()
-            nan_pairs = ~np.logical_or(np.isnan(groundTruth.sel(time=timestamp).values.flatten()), 
-                                       np.isnan(estimation.sel(time=timestamp).values.flatten()))
+            nan_pairs = ~np.logical_or(
+                np.isnan(groundTruth.sel(time=timestamp).values.flatten()), 
+                np.isnan(estimation.sel(time=timestamp).values.flatten()))
             
-            groundTruth_for_RMSE = np.compress(nan_pairs,
-                                               groundTruth.sel(time=timestamp).values.flatten())
-            est_for_RMSE = np.compress(nan_pairs,
-                                       estimation.sel(time=timestamp).values.flatten())
+            groundTruth_for_RMSE = np.compress(
+                nan_pairs,
+                groundTruth.sel(time=timestamp).values.flatten())
+            est_for_RMSE = np.compress(
+                nan_pairs,
+                estimation.sel(time=timestamp).values.flatten())
             
             if rounding is True:
                 groundTruth_for_RMSE = np.round(groundTruth_for_RMSE, 3)
@@ -239,6 +263,8 @@ def time_RMSE_spatSnapshots_bins(groundTruth,
             if normalize is False:
                 time_RMSE_vec[i] = rmse(groundTruth_for_RMSE, est_for_RMSE)
             else:
-                time_RMSE_vec[i] = rmse(groundTruth_for_RMSE, est_for_RMSE)/np.mean(groundTruth_for_RMSE)
+                time_RMSE_vec[i] = \
+                    rmse(groundTruth_for_RMSE, est_for_RMSE)/np.nanmean(
+                        groundTruth_for_RMSE)
             #print('rmse normalized by the domains mean rain intensity')
     return time_RMSE_vec
