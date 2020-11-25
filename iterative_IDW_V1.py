@@ -12,7 +12,7 @@ Based on "Rain Rate Estimation Using Measurements From
 Commercial Telecommunications Links"
 by Oren Goldshtein, Hagit Messer and Artem Zinevich
 '''
-from __future__ import print_function
+# from __future__ import print_function
 import numpy as np
 
 
@@ -67,11 +67,11 @@ def calc_atten_from_rain(df):
 
 
 def create_virtual_gauges(df, 
-                          gauge_length=0.5, 
+                          gauge_length=0.5,
                           num_gauges=None):
     ''' split each cml (a single row of df) into several virtual
     rain gauges.
-    gauge_length - the distance between two gauges in KM.
+    gauge_length - the distance between two gauges in KM. Not yot verified.
     num_gauges - number of virtual gauges per cml (overrides gauge_length)
     df should contain the following columns:
     xa - longitude of site A of the cml
@@ -162,7 +162,8 @@ def calc_grid_weights(D, ROI, method, p_par):
 
 class IdwIterative():
     def __init__(self, df_for_dist, xgrid, ygrid, ROI=0.0, max_iterations=1, 
-                 tolerance=0.0, method=0, p_par=2.0):
+                 tolerance=0.0, method=0, p_par=2.0, fixed_gmz_roi=None):
+        '''ROI- Radius of Influence in meters. A parameter of IDW'''
         self.ROI = ROI
         self.ROI_gmz = ROI
         self.max_iterations = max_iterations
@@ -172,6 +173,8 @@ class IdwIterative():
         self.df_for_dist = df_for_dist
         self.xgrid = xgrid
         self.ygrid = ygrid
+        self.ROI_prev = None
+        self.fixed_gmz_roi = fixed_gmz_roi
         
         self._calc_all_weights()
         print('Calculation of weights finished')
@@ -373,7 +376,8 @@ class IdwIterative():
         Z_flat = self.Z.flatten()
         # use the cmls to caluculate the rain rate at each (x,y) grid point
         for i, p_i in enumerate(self.pixels_with_neighbors_list):
-            gauges_i = np.take(self.gauges_z, self.idx_pxl_single_i_list_all[i])
+            gauges_i = np.take(self.gauges_z, 
+                               self.idx_pxl_single_i_list_all[i])
 #            import pdb; pdb.set_trace()
             Z_flat[p_i] = (self.weights_pxl_list_all[i] * gauges_i).sum()/\
             self.sum_of_weights[i]
@@ -410,7 +414,7 @@ class IdwIterative():
 
             # initial new virtual gauge rain vector for current cml
             cml_num_of_gauges = cml['num_of_gauges']
-
+            
             # loop over current cml's virtual gauges
             for gauge_i in range(cml_num_of_gauges):
                 cml_vg_roi_list = []
@@ -421,12 +425,18 @@ class IdwIterative():
                 # calculate distance of current gauge from all gauges
                 distances = np.sqrt((self.gauges_x - gx)**2.0 +
                                     (self.gauges_y - gy)**2.0)
+                ## calculate IDW weights
+                if self.fixed_gmz_roi:
+                    weights = calc_grid_weights(distances,
+                                                self.fixed_gmz_roi,
+                                                self.method,
+                                                self.p_par)
 
-                 ## calculate IDW weights
-                weights = calc_grid_weights(distances, 
-                                            self.ROI, 
-                                            self.method, 
-                                            self.p_par)
+                else:
+                    weights = calc_grid_weights(distances, 
+                                                self.ROI, 
+                                                self.method, 
+                                                self.p_par)
                 weights = weights * self.use_gauges
                 weights[cml_i, :] = 0.0  # remove weights for current cml
                 weights[weights < weights.max()/100.0] = 0.0
@@ -452,11 +462,16 @@ class IdwIterative():
                                     append(row*self.max_num_of_gauges + col)
                 # add IDW weights to covariance matrix
 #                z = 0.5
-                self.cml_vg_roi_single_i_list_all.append(cml_vg_roi_single_i_list)
+                self.cml_vg_roi_single_i_list_all.append(
+                    cml_vg_roi_single_i_list
+                    )
                 self.cml_vg_roi_single_i_list_all = \
                 list(filter(None, self.cml_vg_roi_single_i_list_all))
                 self.cml_vg_roi_list_all.append(cml_vg_roi_list)
-                self.cml_vg_roi_list_all = list(filter(None, self.cml_vg_roi_list_all))
+                self.cml_vg_roi_list_all = list(
+                    filter(None, 
+                           self.cml_vg_roi_list_all)
+                    )
                 weights_vector = weights[select_gauges].flatten()
                 if len(weights_vector) != 0:
                     weights_vector /= weights_vector.sum(axis=None)  # Normalize
@@ -477,7 +492,16 @@ class IdwIterative():
             weights_pxl_list = []
             idx_pxl_single_i_list = []
             dist_pxl = np.sqrt((self.gauges_x-px)**2 + (self.gauges_y-py)**2)
-            weights_pxl = calc_grid_weights(dist_pxl, self.ROI, self.method, self.p_par)
+            if self.fixed_gmz_roi:
+                weights_pxl = calc_grid_weights(dist_pxl, 
+                                                self.fixed_gmz_roi, 
+                                                self.method, 
+                                                self.p_par)
+            else:
+                weights_pxl = calc_grid_weights(dist_pxl, 
+                                                self.ROI, 
+                                                self.method, 
+                                                self.p_par)
             weights_pxl[np.bitwise_not(self.use_gauges)] = 0.0 # Check!
             if weights_pxl.sum() != 0:
                     self.pixels_with_neighbors_list.append(p_i)
@@ -486,13 +510,19 @@ class IdwIterative():
                             for col in range(self.max_num_of_gauges):
                                 if weights_pxl[row,col].sum() != 0: # CAN REMOVE SUM
                                     idx_weights_pxl_list.append((row,col))
-                                    weights_pxl_list.append(weights_pxl[row,col])
+                                    weights_pxl_list.append(
+                                        weights_pxl[row,col]
+                                        )
                                     idx_pxl_single_i_list.\
                                     append(row*self.max_num_of_gauges + col)
             self.idx_weights_pxl_list_all.append(idx_weights_pxl_list)
-            self.idx_weights_pxl_list_all = list(filter(None, self.idx_weights_pxl_list_all))
+            self.idx_weights_pxl_list_all = list(
+                filter(None, self.idx_weights_pxl_list_all)
+                )
             self.weights_pxl_list_all.append(weights_pxl_list)
-            self.weights_pxl_list_all = list(filter(None, self.weights_pxl_list_all))
+            self.weights_pxl_list_all = list(
+                filter(None,self.weights_pxl_list_all)
+                )
             self.idx_pxl_single_i_list_all.append(idx_pxl_single_i_list)
             self.idx_pxl_single_i_list_all = \
                 list(filter(None, self.idx_pxl_single_i_list_all))
