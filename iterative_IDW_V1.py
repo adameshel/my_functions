@@ -314,6 +314,7 @@ class IdwIterative():
                 b = self.df.iloc[cml_prev]['b']
                 theta = cml_new_z**b
                 r = (R**b - (1.0/K)*np.sum(theta) + theta)
+                # print(np.sum(r[r < 0.0]))
     #            import pdb; pdb.set_trace()
                 r[r < 0.0] = 0.0  # set negative rain rates to 0
     
@@ -343,7 +344,7 @@ class IdwIterative():
                 cov[start:stop, start:stop] = sigma
 
             # add IDW weights to covariance matrix
-            z = 0.5
+            z = 1.0
             W = z*np.diagflat(1.0/self.weights_vg_list[i])  # 1/weights on diagonal
             cov = cov + W
 
