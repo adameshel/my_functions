@@ -14,6 +14,7 @@ by Oren Goldshtein, Hagit Messer and Artem Zinevich
 '''
 # from __future__ import print_function
 import numpy as np
+from collections import Counter
 
 
 def apply_inverse_power_law(A, L, a, b):
@@ -337,12 +338,18 @@ class IdwIterative():
             M = len(self.cml_vg_roi_list_all[i])  # total number of gauges in ROI
             cov = np.zeros((M, M))
 
+            neighbor_cmls_count_temp = [q[0] for q in self.cml_vg_roi_list_all[i]]
+            count = Counter(neighbor_cmls_count_temp)
+            dictionary_items = count.items()
+            d_count = dict(sorted(dictionary_items))
+            
             # add measurement quantization error to the cov matrix
-            for _, sigma in enumerate(variances):
-                start = cml_vg[0] * M
-                stop = start + M
-                cov[start:stop, start:stop] = sigma
-
+            stop = 0
+            for ic, c in enumerate(d_count):
+            # for tt, sigma in enumerate(variances):
+                start = stop
+                stop = start + d_count[c]
+                cov[start:stop, start:stop] = variances[ic]
             # add IDW weights to covariance matrix
             z = 1.0
             W = z*np.diagflat(1.0/self.weights_vg_list[i])  # 1/weights on diagonal
