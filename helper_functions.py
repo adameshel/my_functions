@@ -17,6 +17,12 @@ def split_at(s, c, n):
     words = s.split(c)
     return c.join(words[:n]), c.join(words[n:])
 
+def delete_from_list(my_list, idxs):
+    '''Delete items from list (my_list) by supplying a list of indeces (idxs) to delete'''
+    for idx in sorted(idxs, reverse=True):
+        del my_list[idx]
+    return my_list
+
 
 from IPython.display import display_html
 

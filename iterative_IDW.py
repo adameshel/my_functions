@@ -208,6 +208,7 @@ class IdwIterative():
             self.gauges_z[cml_index, :gauges] = cml['z']
 
         self.gauges_z_prev = self.gauges_z.copy()
+        import pdb; pdb.set_trace()
 
         # calculate the measurement error variance for each cml
         # these variance values do not change during each iteration
@@ -297,7 +298,10 @@ class IdwIterative():
                                     (self.gauges_y - gy)**2.0)
 
                 # calculate IDW weights
-                weights = calc_grid_weights(distances, self.ROI, self.method, self.p_par)
+                weights = calc_grid_weights(distances, 
+                    self.ROI, 
+                    self.method, 
+                    self.p_par)
                 weights = weights * self.use_gauges
                 weights[cml_i, :] = 0.0  # remove weights for current cml
                 weights[weights < weights.max()/100.0] = 0.0
@@ -317,18 +321,21 @@ class IdwIterative():
                 # Initialize a covariance matrix to zero
                 M = gauges_in_ROI.sum()  # total number of gauges in ROI
                 cov = np.zeros((M, M))
-
+                # import pdb; pdb.set_trace()
                 # add measurement quantization error to the cov matrix
-                for i, sigma in enumerate(variances):
-                    start = cml_i * np.sum(gauges_in_ROI[i, :])
-                    stop = start + np.sum(gauges_in_ROI[i, :])
+                for tt, sigma in enumerate(variances):
+                    start = cml_i * np.sum(gauges_in_ROI[tt, :])
+                    stop = start + np.sum(gauges_in_ROI[tt, :])
                     cov[start:stop, start:stop] = sigma
+                    # if tt==3:
+                        # import pdb; pdb.set_trace()
+                # import pdb; pdb.set_trace()
 
                 # select the indices of cml gauges (only in the ROI)
                 select_gauges = gauges_in_ROI * self.use_gauges
 
                 # add IDW weights to covariance matrix
-                z = 0.5
+                z = 1.0
                 weights_vector = weights[select_gauges].flatten()
                 weights_vector /= weights_vector.sum(axis=None)  # Normalize
                 W = z*np.diagflat(1.0/weights_vector)  # 1/weights on diagonal

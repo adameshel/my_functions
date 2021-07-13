@@ -15,7 +15,7 @@ def rmse(predicted, observed):
     """Returns the Root Mean Square Error of 2 sets."""
     p = np.array(predicted)
     o = np.array(observed)
-    RMSE = np.sqrt(((p - o) ** 2).mean())
+    RMSE = np.sqrt(np.nanmean((p - o) ** 2))
     return RMSE
 
 
