@@ -8,7 +8,7 @@ def matlab2datetime(matlab_datenum):
     return day + dayfrac
 
 
-import os.path
+
 from os import listdir
 
 def split_at(s, c, n):
@@ -34,3 +34,16 @@ def nans(shape, dtype=float):
     a = np.empty(np.asarray(shape, dtype=int), dtype)
     a.fill(np.nan)
     return a
+
+def make_tuple_arr(arr):
+    l_tuple = []
+    for _,t in enumerate(arr):
+        l_tuple.append(tuple((t,)))
+    return l_tuple
+
+def moving_average(x, w):
+    """
+    x: 1D signal
+    w: window size 
+    """
+    return np.convolve(x, np.ones(w), 'valid') / w
