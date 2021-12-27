@@ -47,3 +47,7 @@ def moving_average(x, w):
     w: window size 
     """
     return np.convolve(x, np.ones(w), 'valid') / w
+
+def sort_array_by_list(my_list, my_array):
+    sorted_array = np.array([x for _,x in sorted(zip(my_list,my_array))])
+    return sorted_array
